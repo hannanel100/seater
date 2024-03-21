@@ -1,10 +1,11 @@
 import { seats, initialNames } from "./constants";
 
 export type Seats = typeof seats;
-export type Keys = (typeof seats)[number];
-export type Values = (typeof initialNames)[number] | null;
+export type Key = (typeof seats)[number];
+export type Name = (typeof initialNames)[number];
+export type Values = { name: (typeof initialNames)[number] | null };
 export type SeatsCombination = {
-  [K in Keys]: Values;
+  [K in Key]: Values;
 };
 type Leyning = {
   [key: string]: string;
@@ -35,4 +36,9 @@ export type HebcalResponse = {
   location: Location;
   range: Range;
   items: Item[];
+};
+
+export type Parashat = {
+  title: string;
+  date: string;
 };

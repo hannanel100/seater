@@ -1,53 +1,117 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import NameList from "./NameList";
 import Table from "./Table";
-import { SeatsCombination, Keys, Values } from "../types";
+import { SeatsCombination, Key, Name, Parashat } from "../types";
 import { seats, initialNames } from "../constants";
+import NameList from "./NameList";
+import { formatDate } from "../utils/formatDate";
 const initialSeatedNames: SeatsCombination = {
-  Bottom1: null,
-  Bottom2: null,
-  Bottom3: "אמא",
-  Bottom4: null,
-  Left: null,
-  Right: "אבא",
-  Top1: null,
-  Top2: null,
-  Top3: null,
-  Top4: null,
+  Bottom1: { name: null },
+  Bottom2: { name: null },
+  Bottom3: { name: "אמא" },
+  Bottom4: { name: null },
+  Left: { name: null },
+  Right: { name: "אבא" },
+  Top1: { name: null },
+  Top2: { name: null },
+  Top3: { name: null },
+  Top4: { name: null },
 };
-const Main: React.FC = () => {
+const Main = ({ title, date }: Parashat) => {
   const [seatedNames, setSeatedNames] = useLocalStorage<SeatsCombination>(
     "seatedNames",
     initialSeatedNames
   );
-  const [names, setNames] = useState<Values[]>(
-    initialNames.filter((name) => !Object.values(seatedNames).includes(name))
+  const [lastChange, setLastChange] = useLocalStorage<string>("lastChange", "");
+  const [names, setNames] = useState<Name[]>(
+    initialNames.filter(
+      (name) =>
+        !Object.values(seatedNames).find(
+          (seatedName) => seatedName?.name === name
+        )
+    )
   );
-  const handleDrop = (id: Keys, name: Values) => {
-    console.log("🚀 ~ handleDrop ~ name:", name);
-    console.log("🚀 ~ handleDrop ~ id:", id);
-    console.log("🚀 ~ handleDrop ~ seatedNames:", seatedNames);
-    setSeatedNames({ ...seatedNames, [id]: name });
-    setNames((prevNames) => prevNames.filter((n) => n !== name));
+  /**
+   * Handle drop action.
+   * If the name is already seated, do nothing.
+   * If the name is not seated, remove the first name from the available names list and add it to the seated names list.
+   * @param id The id of the seat where the name is being dropped
+   * @param seatedName The name being dropped, or null if it was not already seated
+   */
+  const handleDrop = (id: Key, seatedName: Name) => {
+    if (!seatedName) {
+      const name = names[0];
+      setNames((prevNames) => prevNames.slice(1));
+      setSeatedNames((prevNames) => ({ ...prevNames, [id]: { name } }));
+    }
+    if (seatedName) {
+      setSeatedNames({ ...seatedNames, [id]: { name: seatedName } });
+      setNames((prevNames) =>
+        prevNames.filter((nameToFilter) => nameToFilter !== seatedName)
+      );
+    }
+    // set lastChange in format of YYYY-MM-DDconst today = new Date()
+    const today = new Date();
+    const formattedDate = formatDate(today);
+    setLastChange(formattedDate);
   };
 
-  const handleUndrop = (id: Keys) => {
-    if ((seatedNames as SeatsCombination)[id]) {
-      const name = (seatedNames as SeatsCombination)[id];
-      if (name) {
-        setSeatedNames((prevNames) => ({ ...prevNames, [id]: null }));
-        setNames((prevNames) => [...prevNames, name]);
-      }
+  /**
+   * Undrop a name from its seat.
+   * It will set the name to null in the seatedNames object
+   * and add the name back to the list of names.
+   * @param name The name to undrop
+   */
+  const handleUndrop = (name: Name) => {
+    const keysArray = Object.keys(seatedNames) as Key[];
+    const key = keysArray.find((k) => seatedNames[k]?.name === name);
+    if (key) {
+      setSeatedNames((prevNames) => ({
+        ...prevNames,
+        [key]: { name: null },
+      }));
+      setNames((prevNames) => [...prevNames, name]);
+    }
+    const today = new Date();
+    const formattedDate = formatDate(today);
+    setLastChange(formattedDate);
+  };
+  const changeSeatsWhenParashatChanges = () => {
+    // check if the lastChange is after the date of the parashat
+    // if so, change everyones seating to the next seat and update lastChange
+    if (new Date(lastChange) > new Date("2023-05-25")) {
+      console.log("date changed");
+      //  move each name to the next seat except for "אבא" and "אמא"
+      // create an array of seats
+      const seatsArray = Object.values(seatedNames).map(
+        (seat) => seat?.name
+      ) as Name[];
+      console.log(
+        "🚀 ~ changeSeatsWhenParashatChanges ~ seatsArray:",
+        seatsArray
+      );
+      // move each name to the next seat
+      const nextSeats = seatsArray.slice(1).concat(seatsArray.slice(0, 1));
+
+      console.log(
+        "🚀 ~ changeSeatsWhenParashatChanges ~ nextSeats:",
+        nextSeats
+      );
+
+      const today = new Date();
+      const formattedDate = formatDate(today);
+      setLastChange(formattedDate);
+      // if lastChange is before the date of the parashat, do nothing
+    } else {
+      console.log("date ok");
     }
   };
 
-  useEffect(() => {
-    console.log("🚀 ~ seatedNames", seatedNames);
-  }, [seatedNames]);
+  changeSeatsWhenParashatChanges();
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="container mx-auto p-4">
@@ -59,14 +123,7 @@ const Main: React.FC = () => {
             handleDrop={handleDrop}
             handleUndrop={handleUndrop}
           />
-          <div className="w-1/4 mr-4">
-            <h2 className="text-lg font-bold mb-2">Names</h2>
-            <div className="bg-gray-100 p-2 rounded">
-              {names.map(
-                (name) => name && <NameList key={name} id={name} name={name} />
-              )}
-            </div>
-          </div>
+          <NameList names={names} />
         </div>
       </div>
     </DndProvider>

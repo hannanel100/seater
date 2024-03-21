@@ -1,30 +1,17 @@
-"use client";
-import { useDrag } from "react-dnd";
+import React from "react";
+import NameListItem from "./NameListItem";
+import { Name } from "../types";
 
-interface NameProps {
-  id: string;
-  name: string;
-}
-
-const NameList: React.FC<NameProps> = ({ id, name }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "name",
-    item: { id, name },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
-
+type NameListProps = {
+  names: Name[];
+};
+export default function NameList({ names }: NameListProps) {
   return (
-    <div
-      ref={drag}
-      className={`cursor-move p-2 rounded text-black ${
-        isDragging ? "bg-blue-200" : "bg-gray-200"
-      }`}
-    >
-      {name}
+    <div className="w-1/4 mr-4">
+      <h2 className="text-lg font-bold mb-2">Names</h2>
+      <div className="bg-gray-100 p-2 rounded">
+        {names.map((name) => name && <NameListItem key={name} name={name} />)}
+      </div>
     </div>
   );
-};
-
-export default NameList;
+}

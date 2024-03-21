@@ -1,13 +1,13 @@
 "use client";
 import React from "react";
 import TableSeat from "./TableSeat";
-import { Keys, Seats, SeatsCombination, Values } from "../types";
+import { Key, Name, Seats, SeatsCombination, Values } from "../types";
 
 interface TableProps {
   seatedNames: SeatsCombination | {};
   seats: Seats;
-  handleDrop: (id: Keys, name: Values) => void;
-  handleUndrop: (id: Keys) => void;
+  handleDrop: (id: Key, name: Name) => void;
+  handleUndrop: (name: Name) => void;
 }
 
 const Table: React.FC<TableProps> = ({
@@ -24,7 +24,7 @@ const Table: React.FC<TableProps> = ({
           <TableSeat
             key={seat}
             id={seat}
-            name={(seatedNames as SeatsCombination)[seat]}
+            seatedName={(seatedNames as SeatsCombination)[seat]}
             onDrop={handleDrop}
             onUndrop={handleUndrop}
           />
@@ -32,7 +32,7 @@ const Table: React.FC<TableProps> = ({
         <TableSeat
           key="Left"
           id="Left"
-          name={(seatedNames as SeatsCombination).Left}
+          seatedName={(seatedNames as SeatsCombination).Left}
           onDrop={handleDrop}
           onUndrop={handleUndrop}
         />
@@ -42,7 +42,7 @@ const Table: React.FC<TableProps> = ({
         <TableSeat
           key="Right"
           id="Right"
-          name={(seatedNames as SeatsCombination).Right}
+          seatedName={(seatedNames as SeatsCombination).Right}
           onDrop={handleDrop}
           onUndrop={handleUndrop}
         />
@@ -50,7 +50,7 @@ const Table: React.FC<TableProps> = ({
           <TableSeat
             key={seat}
             id={seat}
-            name={(seatedNames as SeatsCombination)[seat]}
+            seatedName={(seatedNames as SeatsCombination)[seat]}
             onDrop={handleDrop}
             onUndrop={handleUndrop}
           />
